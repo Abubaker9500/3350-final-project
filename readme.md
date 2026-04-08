@@ -33,7 +33,7 @@ Potential for more traditional non-anonymous dating experience.
 # Nathaniel (backend/logic)
 
 
-### Abubaker (Frontend)
+# Abubaker (Frontend)
 
 
 
