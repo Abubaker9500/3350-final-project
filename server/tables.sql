@@ -29,7 +29,7 @@ CREATE TABLE matches (
     close_reason VARCHAR(255),
 
     FOREIGN KEY (user1_id) REFERENCES users (user_id),
-    FOREIGN KEY (user2_id) REFERENCES users(user_id),
+    FOREIGN KEY (user2_id) REFERENCES users(user_id)
 );
 
 CREATE TABLE conversations (
@@ -86,7 +86,7 @@ CREATE TABLE reveal_requests (
     PRIMARY KEY (match_id, user_id),
 
     FOREIGN KEY (match_id) REFERENCES matches(match_id),
-    FOREIGN KEY (user_id) REFERENCES user(user_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
 CREATE TABLE reports (
@@ -122,7 +122,7 @@ CREATE TABLE email_blocks (
     blocked_email VARCHAR(255) NOT NULL,
     user_id INT,
 
-    FOREIGN KEY (user_id) REFERENCES user(user_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
 CREATE TABLE profile_photos (
