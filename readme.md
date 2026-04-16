@@ -44,8 +44,8 @@ Potential for more traditional non-anonymous dating experience.
 4. Create an env file in the server folder formatted as:
 ```env
 DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=pass123
+DB_USER=root (most likely deafult)
+DB_PASSWORD=your password 
 ```
 5. Go to the server directory and run "npm run start" to launch the server. For the client-side front-end, go to react-app and run "npm run dev".
 
