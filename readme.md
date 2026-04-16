@@ -37,3 +37,17 @@ Potential for more traditional non-anonymous dating experience.
 
 
 
+# Setup Guide
+1. Clone/download the repository
+2. Download mysql or MariaDB on your PC. Also download Node.js
+3. Run npm install in both the server and react-app directory to install required dependencies
+4. Create an env file in the server folder formatted as:
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=pass123
+```
+5. Go to the server directory and run "npm run start" to launch the server. For the client-side front-end, go to react-app and run "npm run dev".
+
+
+
