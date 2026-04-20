@@ -1,0 +1,255 @@
+import { useState } from 'react'
+
+const MOCK_PROFILES = [
+  {
+    id: 1,
+    name: 'Alex', age: 22,
+    major: 'Business Administration', year: 'Senior',
+    distance: '0.5 miles away',
+    bio: 'Entrepreneur at heart, fitness enthusiast, and coffee connoisseur. Let\'s grab a drink at the campus café!',
+    hobbies: ['Business', 'Fitness', 'Travel', 'Cooking', 'Basketball'],
+    photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&q=80',
+  },
+  {
+    id: 2,
+    name: 'Jordan', age: 21,
+    major: 'Computer Science', year: 'Junior',
+    distance: '0.3 miles away',
+    bio: 'Big into gaming and late-night coding sessions. Always down to explore new places around Bakersfield.',
+    hobbies: ['Gaming', 'Coding', 'Travel', 'Music'],
+    photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80',
+  },
+  {
+    id: 3,
+    name: 'Riley', age: 23,
+    major: 'Biology', year: 'Senior',
+    distance: '1.2 miles away',
+    bio: 'Pre-med student who loves hiking in the Sierras and trying every taco truck in Bakersfield.',
+    hobbies: ['Hiking', 'Cooking', 'Reading', 'Yoga'],
+    photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&q=80',
+  },
+  {
+    id: 4,
+    name: 'Morgan', age: 20,
+    major: 'Psychology', year: 'Sophomore',
+    distance: '0.8 miles away',
+    bio: 'Art lover and campus volunteer. Looking for someone to hit up the farmers market with!',
+    hobbies: ['Art', 'Volunteering', 'Music', 'Movies'],
+    photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&q=80',
+  },
+]
+
+export default function Discover({ navigate }) {
+  const [index, setIndex] = useState(0)
+  const [swipeAnim, setSwipeAnim] = useState(null) // 'left' | 'right'
+  const [showMatch, setShowMatch] = useState(false)
+
+  const profile = MOCK_PROFILES[index]
+
+  const swipe = (dir) => {
+    setSwipeAnim(dir)
+    setTimeout(() => {
+      setSwipeAnim(null)
+      if (dir === 'right' && Math.random() > 0.4) {
+        setShowMatch(true)
+        return
+      }
+      setIndex(i => i + 1)
+    }, 350)
+  }
+
+  if (showMatch) {
+    return (
+      <MatchModal
+        profile={profile}
+        onMessage={() => { setShowMatch(false); navigate('messages') }}
+        onKeepSwiping={() => { setShowMatch(false); setIndex(i => i + 1) }}
+      />
+    )
+  }
+
+  if (!profile) {
+    return (
+      <div>
+        <Header />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px', gap: 16 }}>
+          <div style={{ fontSize: 56 }}>🔥</div>
+          <h3 style={{ fontSize: 20, fontWeight: 700, color: 'var(--blue)' }}>You've seen everyone!</h3>
+          <p style={{ color: 'var(--gray-600)', textAlign: 'center', fontSize: 14 }}>Check back later for new Rowdy students.</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--gray-100)' }}>
+      <Header />
+
+      <div style={{ flex: 1, padding: '16px 16px 0' }}>
+        {/* Card */}
+        <div style={{
+          borderRadius: 'var(--radius-card)',
+          overflow: 'hidden',
+          boxShadow: 'var(--shadow-card)',
+          position: 'relative',
+          aspectRatio: '4/4.5',
+          background: '#222',
+          transform: swipeAnim === 'left'
+            ? 'translateX(-120%) rotate(-15deg)'
+            : swipeAnim === 'right'
+            ? 'translateX(120%) rotate(15deg)'
+            : 'translateX(0) rotate(0)',
+          opacity: swipeAnim ? 0 : 1,
+          transition: swipeAnim ? 'transform 0.35s ease, opacity 0.35s' : 'none',
+        }}>
+          {/* Photo */}
+          <img
+            src={profile.photo}
+            alt={profile.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            onError={e => { e.target.style.display = 'none' }}
+          />
+
+          {/* Gradient overlay */}
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.4) 55%, transparent 100%)',
+            padding: '24px 20px 20px',
+          }}>
+            {/* Name & Age */}
+            <h2 style={{ color: '#fff', fontSize: 28, fontWeight: 800, marginBottom: 4 }}>
+              {profile.name}, {profile.age}
+            </h2>
+
+            {/* Major & Year */}
+            <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 15, fontWeight: 500, marginBottom: 6 }}>
+              {profile.major} • {profile.year}
+            </p>
+
+            {/* Distance */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 10 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2.5">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}>{profile.distance}</span>
+            </div>
+
+            {/* Bio */}
+            <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, lineHeight: 1.5, marginBottom: 14 }}>
+              {profile.bio}
+            </p>
+
+            {/* Hobbies */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+              {profile.hobbies.map(h => (
+                <span key={h} style={{
+                  background: 'rgba(255,255,255,0.18)',
+                  backdropFilter: 'blur(4px)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  color: '#fff', fontSize: 12, fontWeight: 600,
+                  padding: '5px 12px', borderRadius: 99,
+                }}>
+                  {h}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 24, padding: '24px 0 8px' }}>
+          {/* Dislike */}
+          <button
+            onClick={() => swipe('left')}
+            style={{
+              width: 64, height: 64, borderRadius: '50%',
+              background: 'var(--white)',
+              boxShadow: '0 3px 16px rgba(0,0,0,0.12)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'transform .1s, box-shadow .1s',
+            }}
+            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.93)'}
+            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e63946" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+
+          {/* Like */}
+          <button
+            onClick={() => swipe('right')}
+            style={{
+              width: 76, height: 76, borderRadius: '50%',
+              background: 'var(--yellow)',
+              boxShadow: '0 4px 20px rgba(255,199,44,0.5)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'transform .1s, box-shadow .1s',
+            }}
+            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.93)'}
+            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="var(--blue)" stroke="none">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
+        <p style={{ fontSize: 11, color: 'var(--gray-400)' }}>Do not sell or share my personal info</p>
+      </div>
+    </div>
+  )
+}
+
+function Header() {
+  return (
+    <div style={{
+      background: 'var(--blue)', height: 'var(--header-height)',
+      display: 'flex', alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 20px',
+    }}>
+      <span style={{ color: 'var(--white)', fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}>Rowdy</span>
+      <button style={{ color: 'var(--white)', display: 'flex', alignItems: 'center' }}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </button>
+    </div>
+  )
+}
+
+function MatchModal({ profile, onMessage, onKeepSwiping }) {
+  return (
+    <div style={{
+      minHeight: '100vh', background: 'var(--blue)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      padding: 32, textAlign: 'center',
+    }}>
+      <div style={{ fontSize: 56, marginBottom: 16 }}>🎉</div>
+      <h2 style={{ color: 'var(--yellow)', fontSize: 36, fontWeight: 800, marginBottom: 8 }}>It's a Match!</h2>
+      <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16, marginBottom: 32 }}>
+        You and {profile.name} both liked each other
+      </p>
+      <div style={{ width: 100, height: 100, borderRadius: '50%', overflow: 'hidden', marginBottom: 32, border: '4px solid var(--yellow)' }}>
+        <img src={profile.photo} alt={profile.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      </div>
+      <button onClick={onMessage} style={{
+        width: '100%', padding: 16, background: 'var(--yellow)', color: 'var(--blue)',
+        borderRadius: 14, fontSize: 17, fontWeight: 800, marginBottom: 14,
+      }}>
+        Send a Message
+      </button>
+      <button onClick={onKeepSwiping} style={{
+        width: '100%', padding: 16, background: 'rgba(255,255,255,0.15)',
+        color: 'var(--white)', borderRadius: 14, fontSize: 17, fontWeight: 700,
+        border: '2px solid rgba(255,255,255,0.3)',
+      }}>
+        Keep Swiping
+      </button>
+    </div>
+  )
+}
