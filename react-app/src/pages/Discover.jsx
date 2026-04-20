@@ -165,11 +165,7 @@ function Header() {
       padding: '0 20px',
     }}>
       <span style={{ color: 'var(--white)', fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}>Rowdy</span>
-      <button style={{ color: 'var(--white)', display: 'flex', alignItems: 'center' }}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-      </button>
+      
     </div>
   )
 }
