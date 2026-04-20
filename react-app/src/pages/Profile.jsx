@@ -3,13 +3,14 @@ import { useState } from 'react'
 const HOBBIES = ['Gaming', 'Travel', 'Fitness', 'Cooking', 'Reading', 'Music', 'Art', 'Basketball']
 const MAJORS = ['Computer Science', 'Business Administration', 'Biology', 'Psychology', 'Engineering', 'Nursing', 'Math', 'History', 'English', 'Other']
 
+// Note: This is a static profile page for demonstration. In a real app, profile data would be fetched from a server and updates would be sent back to the server.
 export default function Profile({ navigate }) {
   const [editing, setEditing] = useState(false)
   const [profile, setProfile] = useState({
-    name: 'Abubaker', age: 21, major: 'Computer Science',
+    name: 'Team', age: 123, major: 'Computer Science',
     year: 'Junior', bio: 'CS student at CSUB. Love coding, gaming, and exploring new restaurants around Bakersfield!',
     hobbies: ['Gaming', 'Coding', 'Travel'],
-    email: 'abubaker@csub.edu',
+    email: 'team@csub.edu',
   })
   const [edit, setEdit] = useState({ ...profile })
 

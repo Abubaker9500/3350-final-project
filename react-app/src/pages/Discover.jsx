@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+// TODO: Replace with real API call when backend is ready
 const MOCK_PROFILES = [
   {
     id: 1,
@@ -10,38 +11,11 @@ const MOCK_PROFILES = [
     hobbies: ['Business', 'Fitness', 'Travel', 'Cooking', 'Basketball'],
     photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&q=80',
   },
-  {
-    id: 2,
-    name: 'Jordan', age: 21,
-    major: 'Computer Science', year: 'Junior',
-    distance: '0.3 miles away',
-    bio: 'Big into gaming and late-night coding sessions. Always down to explore new places around Bakersfield.',
-    hobbies: ['Gaming', 'Coding', 'Travel', 'Music'],
-    photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80',
-  },
-  {
-    id: 3,
-    name: 'Riley', age: 23,
-    major: 'Biology', year: 'Senior',
-    distance: '1.2 miles away',
-    bio: 'Pre-med student who loves hiking in the Sierras and trying every taco truck in Bakersfield.',
-    hobbies: ['Hiking', 'Cooking', 'Reading', 'Yoga'],
-    photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&q=80',
-  },
-  {
-    id: 4,
-    name: 'Morgan', age: 20,
-    major: 'Psychology', year: 'Sophomore',
-    distance: '0.8 miles away',
-    bio: 'Art lover and campus volunteer. Looking for someone to hit up the farmers market with!',
-    hobbies: ['Art', 'Volunteering', 'Music', 'Movies'],
-    photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&q=80',
-  },
 ]
 
 export default function Discover({ navigate }) {
   const [index, setIndex] = useState(0)
-  const [swipeAnim, setSwipeAnim] = useState(null) // 'left' | 'right'
+  const [swipeAnim, setSwipeAnim] = useState(null)
   const [showMatch, setShowMatch] = useState(false)
 
   const profile = MOCK_PROFILES[index]
@@ -92,7 +66,8 @@ export default function Discover({ navigate }) {
           overflow: 'hidden',
           boxShadow: 'var(--shadow-card)',
           position: 'relative',
-          aspectRatio: '4/4.5',
+          height: '62vh',
+          maxHeight: 520,
           background: '#222',
           transform: swipeAnim === 'left'
             ? 'translateX(-120%) rotate(-15deg)'
@@ -102,7 +77,6 @@ export default function Discover({ navigate }) {
           opacity: swipeAnim ? 0 : 1,
           transition: swipeAnim ? 'transform 0.35s ease, opacity 0.35s' : 'none',
         }}>
-          {/* Photo */}
           <img
             src={profile.photo}
             alt={profile.name}
@@ -110,36 +84,26 @@ export default function Discover({ navigate }) {
             onError={e => { e.target.style.display = 'none' }}
           />
 
-          {/* Gradient overlay */}
           <div style={{
             position: 'absolute', bottom: 0, left: 0, right: 0,
             background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.4) 55%, transparent 100%)',
             padding: '24px 20px 20px',
           }}>
-            {/* Name & Age */}
             <h2 style={{ color: '#fff', fontSize: 28, fontWeight: 800, marginBottom: 4 }}>
               {profile.name}, {profile.age}
             </h2>
-
-            {/* Major & Year */}
             <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 15, fontWeight: 500, marginBottom: 6 }}>
               {profile.major} • {profile.year}
             </p>
-
-            {/* Distance */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 10 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2.5">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
               </svg>
               <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}>{profile.distance}</span>
             </div>
-
-            {/* Bio */}
             <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, lineHeight: 1.5, marginBottom: 14 }}>
               {profile.bio}
             </p>
-
-            {/* Hobbies */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
               {profile.hobbies.map(h => (
                 <span key={h} style={{
@@ -158,7 +122,6 @@ export default function Discover({ navigate }) {
 
         {/* Action Buttons */}
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 24, padding: '24px 0 8px' }}>
-          {/* Dislike */}
           <button
             onClick={() => swipe('left')}
             style={{
@@ -166,17 +129,11 @@ export default function Discover({ navigate }) {
               background: 'var(--white)',
               boxShadow: '0 3px 16px rgba(0,0,0,0.12)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'transform .1s, box-shadow .1s',
-            }}
-            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.93)'}
-            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
-          >
+            }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e63946" strokeWidth="2.5" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
-
-          {/* Like */}
           <button
             onClick={() => swipe('right')}
             style={{
@@ -184,11 +141,7 @@ export default function Discover({ navigate }) {
               background: 'var(--yellow)',
               boxShadow: '0 4px 20px rgba(255,199,44,0.5)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'transform .1s, box-shadow .1s',
-            }}
-            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.93)'}
-            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
-          >
+            }}>
             <svg width="34" height="34" viewBox="0 0 24 24" fill="var(--blue)" stroke="none">
               <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
             </svg>
@@ -232,10 +185,10 @@ function MatchModal({ profile, onMessage, onKeepSwiping }) {
       <div style={{ fontSize: 56, marginBottom: 16 }}>🎉</div>
       <h2 style={{ color: 'var(--yellow)', fontSize: 36, fontWeight: 800, marginBottom: 8 }}>It's a Match!</h2>
       <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16, marginBottom: 32 }}>
-        You and {profile.name} both liked each other
+        You and {profile?.name} both liked each other
       </p>
       <div style={{ width: 100, height: 100, borderRadius: '50%', overflow: 'hidden', marginBottom: 32, border: '4px solid var(--yellow)' }}>
-        <img src={profile.photo} alt={profile.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <img src={profile?.photo} alt={profile?.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       </div>
       <button onClick={onMessage} style={{
         width: '100%', padding: 16, background: 'var(--yellow)', color: 'var(--blue)',
