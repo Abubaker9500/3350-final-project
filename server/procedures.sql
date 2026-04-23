@@ -107,4 +107,45 @@ BEGIN
     VALUES (p_profile_id, p_hobby_id);
 END $$
 
+--This procedure is meant to help with matchmaking, this procedure returns only users 
+that our user has NOT previously swiped, matches their gender preference, and shares either their major or at least one hobby
+
+CREATE PROCEDURE get_discover_candidates (
+    IN p_user_id INT
+)
+BEGIN
+    SELECT DISTINCT
+        u.user_id,
+        p.profile_id,
+        p.name,
+        p.birthdate,
+        p.gender,
+        p.looking_for,
+        p.major,
+        p.bio
+    FROM users u
+    JOIN profiles p
+        ON u.user_id = p.user_id
+    JOIN profiles me
+        ON me.user_id = p_user_id
+    LEFT JOIN swipes s
+        ON s.user_id = p_user_id
+       AND s.target_id = u.user_id
+    LEFT JOIN profile_hobbies ph_candidate
+        ON ph_candidate.profile_id = p.profile_id
+    LEFT JOIN profile_hobbies ph_me
+        ON ph_me.profile_id = me.profile_id
+       AND ph_me.hobby_id = ph_candidate.hobby_id
+    WHERE u.user_id <> p_user_id
+      AND s.swipe_id IS NULL
+      AND p.gender = me.looking_for
+      AND p.looking_for = me.gender
+      AND (
+            p.major = me.major
+            OR ph_me.hobby_id IS NOT NULL
+          );
+END $$
+
+
+
 DELIMITER ;
