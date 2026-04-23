@@ -1,30 +1,46 @@
 import { useState } from 'react'
 
+const API = 'http://localhost:3001'
+
 export default function Login({ onLogin, onRegister }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!email.endsWith('@csub.edu')) {
-      setError('Please use your @csub.edu email address.')
-      return
+    if (!email || !password) { setError('Please fill in all fields.'); return }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const res = await fetch(`${API}/login`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await res.json()
+
+      if (res.status === 200) {
+        // Store userId for later use
+        localStorage.setItem('userId', data.userId)
+        onLogin(data.userId)
+      } else {
+        setError(data.message || 'Login failed.')
+      }
+    } catch (err) {
+      setError('Could not connect to server. Make sure it is running.')
+    } finally {
+      setLoading(false)
     }
-    if (!password) { setError('Please enter your password.'); return }
-    onLogin()
   }
 
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', flexDirection: 'column',
-      background: 'var(--white)',
-    }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--white)' }}>
       {/* Blue header */}
-      <div style={{
-        background: 'var(--blue)', padding: '48px 24px 36px',
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-      }}>
+      <div style={{ background: 'var(--blue)', padding: '48px 24px 36px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <svg width="36" height="36" viewBox="0 0 24 24" fill="var(--yellow)">
             <path d="M12 2c0 0-5 4.5-5 9a5 5 0 0010 0c0-4.5-5-9-5-9zm0 12a2 2 0 01-2-2c0-1.5 2-4 2-4s2 2.5 2 4a2 2 0 01-2 2z"/>
@@ -56,7 +72,9 @@ export default function Login({ onLogin, onRegister }) {
             />
           </div>
           {error && <p style={{ color: 'var(--red)', fontSize: 13 }}>{error}</p>}
-          <button type="submit" style={primaryBtnStyle}>Sign In</button>
+          <button type="submit" disabled={loading} style={{ ...primaryBtnStyle, opacity: loading ? 0.7 : 1 }}>
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
         </form>
 
         <div style={{ textAlign: 'center', marginTop: 28 }}>
@@ -76,17 +94,6 @@ export default function Login({ onLogin, onRegister }) {
   )
 }
 
-const labelStyle = {
-  display: 'block', fontSize: 13, fontWeight: 600,
-  color: 'var(--gray-600)', marginBottom: 6,
-}
-const inputStyle = {
-  width: '100%', padding: '12px 14px', border: '1.5px solid var(--gray-200)',
-  borderRadius: 10, fontSize: 15, outline: 'none',
-  transition: 'border-color .15s',
-}
-const primaryBtnStyle = {
-  width: '100%', padding: '14px', background: 'var(--blue)',
-  color: 'var(--white)', borderRadius: 12, fontSize: 16,
-  fontWeight: 700, marginTop: 4, transition: 'opacity .15s',
-}
+const labelStyle = { display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', marginBottom: 6 }
+const inputStyle = { width: '100%', padding: '12px 14px', border: '1.5px solid var(--gray-200)', borderRadius: 10, fontSize: 15, outline: 'none' }
+const primaryBtnStyle = { width: '100%', padding: '14px', background: 'var(--blue)', color: 'var(--white)', borderRadius: 12, fontSize: 16, fontWeight: 700, marginTop: 4 }

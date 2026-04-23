@@ -1,6 +1,8 @@
 const express = require('express');
 const app = express();
 app.use(express.json());
+const cors = require('cors');
+app.use(cors());
 const port = 3001;
 const bcrypt = require('bcrypt');
 const mysql = require('mysql2');
@@ -60,7 +62,8 @@ app.post('/createAccount', async (req, res) => {
     }
 
     con.query('SELECT * FROM users WHERE email = ?', [email], async (err, rows) => {
-        if (rows.length > 0)
+    if (err) return res.json({ message: 'Database error' });
+    if (rows.length > 0)
             return res.json({ message: 'Email is already in use' });
 
 

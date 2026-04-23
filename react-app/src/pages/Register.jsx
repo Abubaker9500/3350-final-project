@@ -1,17 +1,41 @@
 import { useState } from 'react'
 
+const API = 'http://localhost:3001'
+
 export default function Register({ onBack, onNext }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!email.endsWith('@csub.edu')) { setError('Must use a @csub.edu email.'); return }
     if (password.length < 8) { setError('Password must be at least 8 characters.'); return }
     if (password !== confirm) { setError('Passwords do not match.'); return }
-    onNext()
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const res = await fetch(`${API}/createAccount`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await res.json()
+
+      if (res.status === 201) {
+        onNext()
+      } else {
+        setError(data.message || 'Registration failed.')
+      }
+    } catch (err) {
+      setError('Could not connect to server. Make sure it is running.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -28,9 +52,7 @@ export default function Register({ onBack, onNext }) {
 
       <div style={{ flex: 1, padding: '32px 24px' }}>
         <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6, color: 'var(--blue)' }}>Create Account</h2>
-        <p style={{ color: 'var(--gray-600)', fontSize: 14, marginBottom: 28 }}>
-          Join Rowdy using your CSUB email
-        </p>
+        <p style={{ color: 'var(--gray-600)', fontSize: 14, marginBottom: 28 }}>Join Rowdy using your CSUB email</p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
@@ -49,7 +71,9 @@ export default function Register({ onBack, onNext }) {
               onChange={e => { setConfirm(e.target.value); setError('') }} style={inputStyle} />
           </div>
           {error && <p style={{ color: 'var(--red)', fontSize: 13 }}>{error}</p>}
-          <button type="submit" style={primaryBtnStyle}>Continue</button>
+          <button type="submit" disabled={loading} style={{ ...primaryBtnStyle, opacity: loading ? 0.7 : 1 }}>
+            {loading ? 'Creating account...' : 'Continue'}
+          </button>
         </form>
       </div>
     </div>
