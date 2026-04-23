@@ -146,6 +146,65 @@ BEGIN
           );
 END $$
 
+--This is going to get the profile of a user given their id.
+-- gives the profile id, name, birthdate, etc, etc.
+CREATE PROCEDURE get_user_profile (
+    IN p_user_id INT
+)
+BEGIN
+    SELECT
+        p.profile_id,
+        p.name,
+        p.birthdate,
+        p.gender,
+        p.looking_for,
+        p.major,
+        p.bio,
+        u.email,
+        u.email_verified,
+        u.status,
+        u.created_at,
+        u.last_login
+    FROM profiles p
+    JOIN users u
+        ON p.user_id = u.user_id
+    WHERE p.user_id = p_user_id;
+END $$
+
+-- Get users matches given user id. 
+CREATE PROCEDURE get_user_matches (
+    IN p_user_id INT
+)
+BEGIN
+    SELECT
+        match_id,
+        user1_id,
+        user2_id,
+        status,
+        matched_at,
+        closed_at,
+        close_reason
+    FROM matches
+    WHERE user1_id = p_user_id
+       OR user2_id = p_user_id;
+END $$
+
+--If both users swipe on eachother this will return a 1, if not it will return a 0. 
+CREATE PROCEDURE check_mutual_like (
+    IN p_user_id INT,
+    IN p_target_id INT
+)
+BEGIN
+    SELECT COUNT(*) AS mutual_like_count
+    FROM swipes s1
+    JOIN swipes s2
+        ON s1.user_id = p_user_id
+       AND s1.target_id = p_target_id
+       AND s1.decision = 'like'
+       AND s2.user_id = p_target_id
+       AND s2.target_id = p_user_id
+       AND s2.decision = 'like';
+END $$
 
 
 DELIMITER ;
