@@ -108,7 +108,7 @@ BEGIN
 END $$
 
 --This procedure is meant to help with matchmaking, this procedure returns only users 
-that our user has NOT previously swiped, matches their gender preference, and shares either their major or at least one hobby
+--that our user has NOT previously swiped, matches their gender preference, and shares either their major or at least one hobby
 
 CREATE PROCEDURE get_discover_candidates (
     IN p_user_id INT
