@@ -98,6 +98,7 @@ BEGIN
     VALUES (p_match_id, p_user_id, NOW());
 END $$
 
+-- Inserting hobbies into a profile.
 CREATE PROCEDURE add_profile_hobby (
     IN p_profile_id INT,
     IN p_hobby_id INT
@@ -206,5 +207,87 @@ BEGIN
        AND s2.decision = 'like';
 END $$
 
+-- This will given a match id get the conversation id .
+CREATE PROCEDURE get_conversation_by_match (
+    IN p_match_id INT
+)
+BEGIN
+    SELECT
+        conversation_id,
+        is_revealed,
+        last_message_at,
+        closed_at,
+        close_reason,
+        match_id
+    FROM conversations
+    WHERE match_id = p_match_id;
+END $$
 
+-- when we have the conversation id we can get the messages within the conversation. 
+CREATE PROCEDURE get_conversation_messages (
+    IN p_conversation_id INT
+)
+BEGIN
+    SELECT
+        message_id,
+        body,
+        sent_at,
+        conversation_id,
+        user_id,
+        report_id
+    FROM messages
+    WHERE conversation_id = p_conversation_id
+    ORDER BY sent_at ASC;
+END $$
+ 
+-- this shows what hobbies a profile has. 
+CREATE PROCEDURE get_profile_hobbies (
+    IN p_profile_id INT
+)
+BEGIN
+    SELECT
+        h.hobby_id,
+        h.hobby
+    FROM profile_hobbies ph
+    JOIN hobbies h
+        ON ph.hobby_id = h.hobby_id
+    WHERE ph.profile_id = p_profile_id;
+END $$
+
+-- this shows all the conversations a user is having as well as match info. 
+CREATE PROCEDURE get_user_conversations (
+    IN p_user_id INT
+)
+BEGIN
+    SELECT
+        c.conversation_id,
+        c.is_revealed,
+        c.last_message_at,
+        c.closed_at,
+        c.close_reason,
+        c.match_id,
+        m.user1_id,
+        m.user2_id
+    FROM conversations c
+    JOIN matches m
+        ON c.match_id = m.match_id
+    WHERE m.user1_id = p_user_id
+       OR m.user2_id = p_user_id;
+END $$
+
+-- this given the profile photos will return the photo as well as information about it. 
+CREATE PROCEDURE get_profile_photos (
+    IN p_profile_id INT
+)
+BEGIN
+    SELECT
+        photo_id,
+        position,
+        is_primary,
+        is_approved,
+        profile_id
+    FROM profile_photos
+    WHERE profile_id = p_profile_id
+    ORDER BY position ASC;
+END $$
 DELIMITER ;
