@@ -1,135 +1,155 @@
-//creates matchmaking que per user 
-
 const { size, uniq } = require("lodash");
-
-//not connected to back-end, just algorithm
-//will connect to db later
-//database call to match by correct gender
-
-
-//swipe_check is whether they already swiped yes/no on them
-//in future use queries to grab only genders that match user request
+const dotenv = require('dotenv');
+dotenv.config();
+const fs = require('fs');
+const mysql = require('mysql2');
 
 
 
-class user {
-    constructor(id, major, gender, looking_for, hobbies, swipe, blocked, date, email) {
-        this.id = id;
-        this.major = major;
-        this.gender = gender;
-        this.looking_for = looking_for;
-        this.hobbies = hobbies;
-        this.swipe_check = swipe;
-        this.emails_blocked = blocked;
-        this.age = date;
-        this.email = email;
-    }
+// Source - https://stackoverflow.com/a/21984136
+// Posted by André Snede, modified by community. See post 'Timeline' for change history
+// Retrieved 2026-05-02, License - CC BY-SA 4.0
+
+function _calculateAge(birthday) { // birthday is a date
+    var ageDifMs = Date.now() - birthday.getTime();
+    var ageDate = new Date(ageDifMs); // miliseconds from epoch
+    return Math.abs(ageDate.getUTCFullYear() - 1970);
 }
 
-class match {
-    constructor(id, major, hobbies, last_login, gender, swipe, age, looking_for, email, blocked) {
-        this.id = id;
-        this.major = major;
-        this.hobbies = hobbies;
-        this.last = last_login;
-        this.gender = gender;
-        this.swipe_check = swipe;
-        this.age = age;
-        this.looking_for = looking_for;
-        this.email = email;
-        this.emails_blocked = blocked;
 
-    }
+module.exports = function startMatchmaking(app, con) {
+    app.post('/getQueue', async (req, res) => {
+        const { userID } = req.body;
+        console.log(req.body);
+        //checks if they submitted user
+        if (!userID) {
+            return res.json({ message: 'Requires UserID' });
+        }
+        //checks if user exists
+        con.query('SELECT * FROM users WHERE user_id = ?', [userID], (err, rows) => {
+            if (err)
+                return res.json({ message: 'Database error' });
+            if (rows.length === 0)
+                return res.json({ message: 'UserId does not exist' });
+
+            //stores user profile
+            con.query('CALL get_user_profile(?)',
+                [userID],
+                (err, results) => {
+                    if (err)
+                        return res.json({ message: 'Database error', error: err.message });
+                    let user = results[0][0];
+                    //console.log(user);
+
+                    //gets hobbies for user
+                    con.query('CALL get_profile_hobbies(?)',
+                        [user.profile_id],
+                        (err, results) => {
+                            if (err)
+                                return res.json({ message: 'Database error', error: err.message });
+                            user.hobbies = results[0].map(r => r.hobby);
+
+                            //gets cannidates for matchmaking
+                            //query includes hard filters
+                            con.query('CALL get_discover_candidates(?)',
+                                [userID],
+                                (err, results) => {
+                                    if (err)
+                                        return res.json({ message: 'Database error', error: err.message });
+                                    let canidates = results[0];
+                                    console.log(canidates);
+
+                                    //gets hobbies for canidates
+                                    const hobbyPromises = canidates.map((mat) => {
+                                        return new Promise((resolve, reject) => {
+                                            con.query('CALL get_profile_hobbies(?)', [mat.profile_id], (err, results) => {
+                                                if (err) reject(err);
+                                                mat.hobbies = results[0].map(r => r.hobby);
+                                                resolve();
+                                            });
+                                        });
+                                    });
+
+                                    Promise.all(hobbyPromises).then(() => {
+                                        let matchQueue = [];
+                                        canidates.forEach((mat) => {
+                                            //rank matches, rank with 3 categories
+                                            let majorWeight = 0, hobbyWeight = 0, ageWeight = 0;
+
+                                            //major
+                                            if (user.major == mat.major)
+                                                majorWeight = 1;
+
+                                            //hobby
+                                            let hobCount = 0;
+                                            let uniqueHobbies = 0;
+                                            hobCount = user.hobbies.filter(hob => mat.hobbies.includes(hob)).length;
+                                            uniqueHobbies = new Set(user.hobbies.concat(mat.hobbies)).size;
+                                            if (hobCount == 0)
+                                                hobbyWeight = 0;
+                                            else
+                                                hobbyWeight = hobCount / uniqueHobbies;
+
+                                            //age
+                                            let mainAge = _calculateAge(new Date(user.birthdate));
+                                            let matAge = _calculateAge(new Date(mat.birthdate));
+                                            let ageDiff = Math.abs(mainAge - matAge);
+                                            ageWeight = 1 - ageDiff / 10;
+                                            if (ageWeight < 0)
+                                                ageWeight = 0;
+
+                                            //final answer
+                                            let answer = (majorWeight + hobbyWeight + ageWeight) / 3;
+                                            console.log(answer);
+                                            matchQueue.push({
+                                                id: mat.user_id,
+                                                score: answer,
+                                                profile_id: mat.profile_id,
+                                                first_name: mat.first_name,
+                                                last_name: mat.last_name,
+                                                birthdate: mat.birthdate,
+                                                age: _calculateAge(new Date(mat.birthdate)),
+                                                major: mat.major,
+                                                bio: mat.bio,
+                                                gender: mat.gender,
+                                                profile_picture: mat.profile_picture,
+                                                hobbies: mat.hobbies
+                                            });
+                                        });
+
+                                        matchQueue.sort((a, b) => b.score - a.score);
+                                        return res.json({ queue: matchQueue });
+
+                                    }).catch((err) => res.json({ message: 'Database error', error: err.message }));
+                                }
+                            );
+                        }
+                    );
+                }
+            );
+        });
+    });
+
+    //API endpoint to swipe yes or no
+    //decision is string, 'yes' or 'no'
+    app.post('/swipe', async (req, res) => {
+        console.log(req.body);
+        const { userID, targetPID, decision } = req.body;
+        if (!userID || !targetPID || !decision) {
+            return res.status(400).json({ message: "Send userID, targetPID, and decision as 'yes' or 'no' string" });
+        }
+        if (decision !== 'yes' && decision !== 'no') {
+            return res.status(400).json({ message: "Decision must be 'yes' or 'no' string" });
+        }
+
+        //converts userId to PID
+        con.query('CALL get_user_profile(?)', [userID], (err, result) => {
+            if (err) return res.json({ message: 'Database error', error: err.message });
+            let userPID = result[0][0].profile_id;
+            con.query('CALL record_swipe(?,?,?)', [userPID, targetPID, decision], (err) => {
+                if (err) return res.json({ message: 'Database error', error: err.message });
+                return res.json({ message: 'Added swipe as ', swipe: decision });
+            });
+        });
+    });
 }
-
-//matchmaking que for this user
-let main = new user(
-    1,
-    "Computer Science",
-    "Male",
-    "Female",
-    ["gaming", "travel", "baking", "reading"],
-    false,
-    ["blocked@email.com"],
-    new Date("2004-03-25"),
-    "user@email.com",
-);
-
-let matches = [
-    new match(2, "Computer Science", ["gaming", "travel"], new Date("2026-04-10"), "Female", false, new Date("2003-06-12"), "Male", "match1@email.com", []),
-    new match(3, "Math", ["reading", "chess"], new Date("2026-04-08"), "Female", true, new Date("2002-01-20"), "Male", "user@email.com", []),
-    new match(4, "Computer Science", ["gaming", "coding"], new Date("2026-04-09"), "Female", true, new Date("2004-09-15"), "Female", "match3@email.com", []),
-    new match(5, "Computer Science", ["gaming", "travel"], new Date("2026-04-11"), "Male", false, new Date("2003-03-03"), "Male", "match4@email.com", []),
-    new match(6, "Computer Science", ["gym", "music"], new Date("2026-04-12"), "Female", false, new Date("2005-07-22"), "Male", "match5@email.com", []),
-    new match(7, "Biology", ["gaming", "travel", "reading"], new Date("2026-04-13"), "Female", false, new Date("2003-11-30"), "Female", "match6@email.com", []),
-    new match(8, "Computer Science", ["travel"], new Date("2026-04-07"), "Female", true, new Date("1999-05-14"), "Male", "match7@email.com", []),
-    new match(9, "History", ["painting", "hiking"], new Date("2026-04-06"), "Female", false, new Date("2004-02-10"), "Male", "match8@email.com", []),
-    new match(10, "Computer Science", ["gaming", "reading"], new Date("2026-04-05"), "Male", false, new Date("2002-08-18"), "Male", "match9@email.com", []),
-    new match(11, "Engineering", ["travel"], new Date("2026-04-04"), "Female", false, new Date("2004-12-01"), "Male", "match10@email.com", ["match1@email.com"])
-];
-
-
-let matchQueue = [];
-matches.forEach((mat) => {
-
-    const current = new Date();
-    let timeDifference = current - mat.last;
-    let daysDifference = timeDifference / (1000 * 3600 * 24);
-    //checks hard filters first
-    if (main.looking_for != mat.gender || mat.looking_for != main.gender || main.emails_blocked.includes(mat.email) || mat.emails_blocked.includes(main.email)
-        || main.swipe_check || mat.swipe_check || daysDifference > 60) {
-        //no match
-    } else {
-        //rank matches, rank with 4 categories, most recent activity, age silmilarity, hobby overlap, major overlap
-        let majorWeight = 0, hobbyWeight = 0, activityWeight = 0, ageWeight = 0;
-
-        //major
-        if (main.major == mat.major)
-            majorWeight = 1;
-
-        //hobby
-        let hobCount = 0;
-        let uniqueHobbies = 0;
-        hobCount = main.hobbies.filter(hob => mat.hobbies.includes(hob)).length;
-        uniqueHobbies = new Set(main.hobbies.concat(mat.hobbies)).size;
-        if (hobCount == 0)
-            hobbyWeight = 0;
-        else
-            hobbyWeight = hobCount / uniqueHobbies;
-
-        //recent activity
-        //log decay the longer it's been since you've logged on
-        let weeksInactive = Math.floor(daysDifference / 7);
-        if (weeksInactive == 0)
-            activityWeight = 1;
-        else
-            activityWeight = Math.pow(0.85, weeksInactive);
-        if (activityWeight < 0)
-            activityWeight = 0
-
-        //age
-        let mainAge = current.getFullYear() - main.age.getFullYear();
-        let matAge = current.getFullYear() - mat.age.getFullYear();
-        let ageDiff = Math.abs(mainAge - matAge);
-        ageWeight = 1 - ageDiff / 10
-        if (ageWeight < 0)
-            ageWeight = 0;
-
-        //final answer
-        let answer = (majorWeight + hobbyWeight + activityWeight + ageWeight) / 4;
-        console.log(answer);
-        matchQueue.push({ id: mat.id, score: answer });
-    }
-
-    
-
-});
-console.log(matchQueue);
-
-
-
-
-
-
-
-

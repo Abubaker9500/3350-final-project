@@ -46,6 +46,7 @@ Potential for more traditional non-anonymous dating experience.
 DB_HOST=localhost
 DB_USER=root (most likely deafult)
 DB_PASSWORD=your password 
+DB_NAME=datingapp
 ```
 5. Go to the server directory and run "npm run start" to launch the server. For the client-side front-end, go to react-app and run "npm run dev".
 
