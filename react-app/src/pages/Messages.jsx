@@ -2,13 +2,9 @@ import { useState, useEffect } from 'react'
 
 const API = 'http://localhost:3001'
 
-const photoUrl = (url) => {
-  if (!url) return ''
-  return url.startsWith('http') ? url : `${API}${url}`
-}
-
 export default function Messages({ navigate }) {
   const [conversations, setConversations] = useState([])
+  const [pfpUrls, setPfpUrls] = useState({})
   const [loading, setLoading] = useState(true)
 
   const userId = parseInt(localStorage.getItem('userId'))
@@ -62,6 +58,28 @@ export default function Messages({ navigate }) {
   }
 
   useEffect(() => { loadConversations() }, [])
+
+  useEffect(() => {
+    conversations.forEach(conversation => {
+      const otherUserId = conversation.other_user?.user_id
+      if (!otherUserId || pfpUrls[otherUserId]) return
+
+      fetch(`${API}/getPFP`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ userID: otherUserId }),
+      })
+        .then(res => res.ok ? res.blob() : null)
+        .then(blob => {
+          if (!blob) return
+          setPfpUrls(prev => ({
+            ...prev,
+            [otherUserId]: URL.createObjectURL(blob),
+          }))
+        })
+        .catch(() => {})
+    })
+  }, [conversations])
 
   const closeConversation = async (e, conversationId, matchId) => {
     e.stopPropagation()
@@ -144,9 +162,9 @@ export default function Messages({ navigate }) {
                 style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, textAlign: 'left' }}
               >
                 <div style={{ width: 54, height: 54, borderRadius: '50%', overflow: 'hidden', background: 'var(--blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  {c.other_user?.profile_picture ? (
+                  {pfpUrls[c.other_user?.user_id] ? (
                     <img
-                      src={photoUrl(c.other_user.profile_picture)}
+                      src={pfpUrls[c.other_user.user_id]}
                       alt={c.other_user?.name || 'Conversation'}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />

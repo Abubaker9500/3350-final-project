@@ -5,6 +5,7 @@ const API = 'http://localhost:3001'
 export default function Chat({ match, navigate }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
+  const [pfpUrl, setPfpUrl] = useState(null)
   const [showReport, setShowReport] = useState(false)
   const [showOptions, setShowOptions] = useState(false)
   const [conversationId, setConversationId] = useState(match?.conversationId || null)
@@ -30,6 +31,22 @@ export default function Chat({ match, navigate }) {
         if (data.messages) setMessages(data.messages)
       })
       .catch(err => console.error(err))
+  }, [match])
+
+  useEffect(() => {
+    const otherUserId = match?.user_id || match?.id
+    if (!otherUserId) return
+
+    fetch(`${API}/getPFP`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ userID: otherUserId }),
+    })
+      .then(res => res.ok ? res.blob() : null)
+      .then(blob => {
+        if (blob) setPfpUrl(URL.createObjectURL(blob))
+      })
+      .catch(() => setPfpUrl(null))
   }, [match])
 
   useEffect(() => {
@@ -167,9 +184,9 @@ export default function Chat({ match, navigate }) {
           </svg>
         </button>
         <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--yellow)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-          {match?.profile_picture ? (
+          {pfpUrl ? (
             <img
-              src={match.profile_picture}
+              src={pfpUrl}
               alt={match?.name || 'Match'}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
