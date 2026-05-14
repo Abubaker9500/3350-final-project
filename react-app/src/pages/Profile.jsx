@@ -355,9 +355,6 @@ function EditMode({ userId, edit, setEdit, onSave, onCancel }) {
         body: JSON.stringify({
           userID: parseInt(userId),
           name: edit.name,
-          birthdate: edit.birthdate,
-          gender: edit.gender,
-          looking_for: edit.looking_for,
           major: edit.major,
           bio: edit.bio,
         }),

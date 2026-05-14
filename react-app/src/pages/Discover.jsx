@@ -22,8 +22,13 @@ export default function Discover({ navigate }) {
     })
       .then(res => res.json())
       .then(data => {
-        if (data.queue) setQueue(data.queue)
-        setLoading(false)
+        if(data.message){
+          alert(data.message)
+        }
+        if (data.queue){
+        setQueue(data.queue)
+        }
+          setLoading(false)
       })
       .catch(() => setLoading(false))
   }, [])
