@@ -2,7 +2,7 @@
 
 ## Overview
 
-Our project is going to be a web-based dating app desgined to be used within California State University Bakersfield, among students of the school. The goal is to allow students to connect with eachother annonymously and reveal themselves only if they feel a real connection. 
+Our project is going to be a web-based dating app desgined to be used within California State University Bakersfield, among students of the school. The goal is to allow students to connect with eachother annonymously and reveal themselves only if they feel a real connection. The website is on the cloud and can be visited [here.](https://rowdydating.netlify.app/)
 
 
 ## Features 
